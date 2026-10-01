@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ShoppingBag } from "lucide-react";
 import { formatPrice } from "@/lib/menu-data";
 
 type Props = {
@@ -14,15 +15,18 @@ export function CartBar({ count, total }: Props) {
     <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-20 px-3 pb-2">
       <Link
         href="/carrinho"
-        className="mx-auto flex min-h-14 w-full max-w-md items-center justify-between rounded-2xl bg-orange-600 px-4 text-white shadow-lg active:bg-orange-700"
+        className="mx-auto flex min-h-13 w-full max-w-md items-center justify-between rounded-2xl bg-ink px-4 text-white shadow-[0_8px_24px_-8px_rgba(35,29,25,0.55)] active:bg-black"
       >
-        <span className="flex items-center gap-2 font-semibold">
-          <span className="flex h-7 min-w-7 items-center justify-center rounded-full bg-white px-1.5 text-sm text-orange-700">
-            {count}
+        <span className="flex items-center gap-2.5 text-[14px] font-medium">
+          <span className="relative">
+            <ShoppingBag size={20} strokeWidth={1.5} aria-hidden />
+            <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-semibold leading-none">
+              {count}
+            </span>
           </span>
-          Ver carrinho
+          <span className="ml-1">Ver carrinho</span>
         </span>
-        <span className="font-bold">{formatPrice(total)}</span>
+        <span className="text-[14px] font-semibold tabular-nums">{formatPrice(total)}</span>
       </Link>
     </div>
   );

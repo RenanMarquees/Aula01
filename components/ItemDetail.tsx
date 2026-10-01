@@ -13,6 +13,7 @@ import {
 } from "@/lib/menu-data";
 import { showToast } from "@/lib/toast";
 import { BackButton } from "./BackButton";
+import { PhotoPlaceholder } from "./Icon";
 import { PageShell } from "./PageShell";
 import { QtyStepper } from "./QtyStepper";
 
@@ -56,20 +57,19 @@ export function ItemDetail({ item }: { item: MenuItem }) {
 
   return (
     <PageShell className="pb-32">
-      <div
-        aria-hidden
-        className={`relative flex h-64 items-center justify-center bg-gradient-to-br text-8xl ${item.tone}`}
-      >
-        {item.emoji}
-      </div>
+      <PhotoPlaceholder name={item.icon} size={72} className="h-56 w-full" />
       <BackButton className="fixed left-3 top-[calc(0.75rem+env(safe-area-inset-top))] z-20" />
 
-      <main className="space-y-6 px-4 py-5">
+      <main className="space-y-5 px-5 py-6">
         <header>
-          <h1 className="text-2xl font-bold tracking-tight">{item.name}</h1>
-          <p className="mt-1 text-stone-600">{item.description}</p>
-          <p className="mt-2 text-lg font-bold text-orange-700">
-            {item.optionGroups?.length ? "a partir de " : ""}
+          <h1 className="font-display text-[26px] font-normal leading-tight tracking-tight">
+            {item.name}
+          </h1>
+          <p className="mt-1.5 text-[13.5px] leading-relaxed text-muted">{item.description}</p>
+          <p className="mt-3 text-[15px] font-semibold tabular-nums">
+            {item.optionGroups?.length ? (
+              <span className="mr-1 text-[12px] font-normal text-muted">a partir de</span>
+            ) : null}
             {formatPrice(item.price)}
           </p>
         </header>
@@ -81,46 +81,48 @@ export function ItemDetail({ item }: { item: MenuItem }) {
             <fieldset
               key={group.id}
               id={`grupo-${group.id}`}
-              className={`scroll-mt-20 rounded-2xl bg-white p-3 ring-1 ${
-                isMissing ? "ring-2 ring-red-500" : "ring-stone-200"
+              className={`scroll-mt-20 rounded-2xl border bg-surface px-4 py-3 ${
+                isMissing ? "border-danger ring-1 ring-danger" : "border-line"
               }`}
             >
               <legend className="sr-only">{group.title}</legend>
-              <div className="mb-1 flex items-center justify-between px-1">
-                <h2 className="font-semibold" aria-hidden>
+              <div className="flex items-center justify-between">
+                <h2 className="text-[14px] font-semibold" aria-hidden>
                   {group.title}
                 </h2>
                 <span
-                  className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                    group.required ? "bg-orange-100 text-orange-800" : "bg-stone-100 text-stone-600"
+                  className={`rounded-full px-2.5 py-0.5 text-[10.5px] font-semibold uppercase tracking-wider ${
+                    group.required ? "bg-accent-soft text-accent-dark" : "bg-tile text-muted"
                   }`}
                 >
                   {group.required ? "Obrigatório" : "Opcional"}
                 </span>
               </div>
-              <p className="px-1 text-xs text-stone-500">
+              <p className="mt-0.5 text-[12px] text-muted">
                 {group.type === "single" ? "Escolha 1 opção" : "Escolha quantas quiser"}
               </p>
               {isMissing && (
-                <p role="alert" className="mt-2 px-1 text-sm font-medium text-red-600">
+                <p role="alert" className="mt-2 text-[13px] font-medium text-danger">
                   Escolha: {group.title.toLowerCase()}
                 </p>
               )}
 
-              <ul className="mt-1">
+              <ul className="mt-1 divide-y divide-line">
                 {group.choices.map((choice) => (
                   <li key={choice.id}>
-                    <label className="flex min-h-14 cursor-pointer items-center gap-3 rounded-xl px-1 active:bg-stone-50">
+                    <label className="flex min-h-12 cursor-pointer items-center gap-3 text-[14px]">
                       <input
                         type={group.type === "single" ? "radio" : "checkbox"}
                         name={group.id}
                         checked={picked.includes(choice.id)}
                         onChange={() => pick(group, choice.id)}
-                        className="h-5 w-5 shrink-0 accent-orange-600"
+                        className="h-[18px] w-[18px] shrink-0 accent-accent"
                       />
                       <span className="flex-1">{choice.name}</span>
                       {choice.price > 0 && (
-                        <span className="text-sm text-stone-600">+ {formatPrice(choice.price)}</span>
+                        <span className="text-[12.5px] tabular-nums text-muted">
+                          + {formatPrice(choice.price)}
+                        </span>
                       )}
                     </label>
                   </li>
@@ -131,7 +133,7 @@ export function ItemDetail({ item }: { item: MenuItem }) {
         })}
 
         <div>
-          <label htmlFor="observacao" className="mb-1 block font-semibold">
+          <label htmlFor="observacao" className="mb-1.5 block text-[14px] font-semibold">
             Alguma observação?
           </label>
           <textarea
@@ -141,13 +143,13 @@ export function ItemDetail({ item }: { item: MenuItem }) {
             maxLength={140}
             rows={2}
             placeholder="Ex.: sem cebola, molho à parte…"
-            className="w-full resize-none rounded-xl border border-stone-300 bg-white p-3 text-base placeholder:text-stone-400 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-200"
+            className="w-full resize-none rounded-xl border border-line bg-surface p-3 text-[14px] placeholder:text-muted/70 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/15"
           />
-          <p className="mt-1 text-right text-xs text-stone-500">{note.length}/140</p>
+          <p className="mt-1 text-right text-[11px] tabular-nums text-muted">{note.length}/140</p>
         </div>
       </main>
 
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-stone-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
         <div className="mx-auto flex max-w-md items-center gap-3 p-3">
           <QtyStepper
             qty={qty}
@@ -160,8 +162,8 @@ export function ItemDetail({ item }: { item: MenuItem }) {
             type="button"
             onClick={handleAdd}
             aria-disabled={missing.length > 0}
-            className={`min-h-12 flex-1 rounded-full px-4 font-semibold text-white shadow-sm ${
-              missing.length > 0 ? "bg-stone-400" : "bg-orange-600 active:bg-orange-700"
+            className={`min-h-12 flex-1 rounded-full px-4 text-[14px] font-medium leading-tight tracking-wide text-white ${
+              missing.length > 0 ? "bg-muted/60" : "bg-accent active:bg-accent-dark"
             }`}
           >
             {missing.length > 0

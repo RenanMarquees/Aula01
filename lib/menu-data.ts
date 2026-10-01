@@ -1,9 +1,28 @@
 // Dados de exemplo. Na Etapa 4, o dono passa a editar tudo isso pelo painel.
 
+/** Nomes dos ícones de traço fino (veja components/Icon.tsx). */
+export type IconName =
+  | "utensils"
+  | "salad"
+  | "sandwich"
+  | "soup"
+  | "beef"
+  | "fish"
+  | "hamburger"
+  | "cookie"
+  | "citrus"
+  | "cup-soda"
+  | "glass-water"
+  | "beer"
+  | "cake-slice"
+  | "dessert"
+  | "ice-cream-bowl"
+  | "wheat";
+
 export type Category = {
   id: string;
   name: string;
-  emoji: string;
+  icon: IconName;
 };
 
 export type OptionChoice = {
@@ -29,9 +48,8 @@ export type MenuItem = {
   description: string;
   /** Preço em centavos, para evitar erros de arredondamento. */
   price: number;
-  emoji: string;
-  /** Classes de cor do fundo da "foto" provisória. */
-  tone: string;
+  /** Ícone mostrado no lugar da foto, até o dono enviar a foto real. */
+  icon: IconName;
   available: boolean;
   optionGroups?: OptionGroup[];
 };
@@ -39,14 +57,13 @@ export type MenuItem = {
 export const restaurant = {
   name: "Restaurante Exemplo",
   tagline: "Monte seu pedido e envie pelo WhatsApp",
-  logoEmoji: "🍴",
 };
 
 export const categories: Category[] = [
-  { id: "entradas", name: "Entradas", emoji: "🥖" },
-  { id: "pratos", name: "Pratos", emoji: "🍽️" },
-  { id: "bebidas", name: "Bebidas", emoji: "🥤" },
-  { id: "sobremesas", name: "Sobremesas", emoji: "🍰" },
+  { id: "entradas", name: "Entradas", icon: "salad" },
+  { id: "pratos", name: "Pratos", icon: "utensils" },
+  { id: "bebidas", name: "Bebidas", icon: "cup-soda" },
+  { id: "sobremesas", name: "Sobremesas", icon: "cake-slice" },
 ];
 
 const pontoDaCarne: OptionGroup = {
@@ -69,8 +86,7 @@ export const items: MenuItem[] = [
     name: "Bruschetta de tomate",
     description: "Pão italiano tostado, tomate fresco, manjericão e azeite.",
     price: 2200,
-    emoji: "🍅",
-    tone: "from-red-200 to-orange-100",
+    icon: "sandwich",
     available: true,
   },
   {
@@ -79,8 +95,7 @@ export const items: MenuItem[] = [
     name: "Bolinho de bacalhau",
     description: "6 unidades crocantes, acompanham molho de limão.",
     price: 3200,
-    emoji: "🧆",
-    tone: "from-amber-200 to-yellow-100",
+    icon: "fish",
     available: true,
   },
   {
@@ -89,8 +104,7 @@ export const items: MenuItem[] = [
     name: "Batata rústica",
     description: "Porção grande, temperada com alecrim e sal grosso.",
     price: 2800,
-    emoji: "🥔",
-    tone: "from-yellow-200 to-amber-100",
+    icon: "wheat",
     available: true,
     optionGroups: [
       {
@@ -113,8 +127,7 @@ export const items: MenuItem[] = [
     name: "Hambúrguer clássico",
     description: "Blend 180 g, queijo, alface, tomate e molho especial no pão brioche.",
     price: 3800,
-    emoji: "🍔",
-    tone: "from-orange-200 to-amber-100",
+    icon: "hamburger",
     available: true,
     optionGroups: [
       pontoDaCarne,
@@ -137,8 +150,7 @@ export const items: MenuItem[] = [
     name: "Risoto de cogumelos",
     description: "Arroz arbóreo cremoso com mix de cogumelos e parmesão.",
     price: 4600,
-    emoji: "🍄",
-    tone: "from-stone-200 to-amber-100",
+    icon: "soup",
     available: true,
     optionGroups: [
       {
@@ -159,8 +171,7 @@ export const items: MenuItem[] = [
     name: "Filé à parmegiana",
     description: "Filé empanado com molho de tomate e queijo gratinado, arroz e batata frita.",
     price: 5200,
-    emoji: "🥩",
-    tone: "from-red-200 to-orange-100",
+    icon: "beef",
     available: true,
   },
   {
@@ -169,8 +180,7 @@ export const items: MenuItem[] = [
     name: "Salada Caesar com frango",
     description: "Alface americana, frango grelhado, croutons e molho Caesar.",
     price: 3600,
-    emoji: "🥗",
-    tone: "from-green-200 to-lime-100",
+    icon: "salad",
     available: true,
   },
 
@@ -181,8 +191,7 @@ export const items: MenuItem[] = [
     name: "Suco de laranja",
     description: "Natural, espremido na hora. 400 ml.",
     price: 800,
-    emoji: "🍊",
-    tone: "from-orange-200 to-yellow-100",
+    icon: "citrus",
     available: true,
   },
   {
@@ -191,8 +200,7 @@ export const items: MenuItem[] = [
     name: "Refrigerante lata",
     description: "Cola, guaraná ou limão. 350 ml.",
     price: 600,
-    emoji: "🥤",
-    tone: "from-red-200 to-rose-100",
+    icon: "cup-soda",
     available: true,
   },
   {
@@ -201,8 +209,7 @@ export const items: MenuItem[] = [
     name: "Água mineral",
     description: "Com ou sem gás. 500 ml.",
     price: 400,
-    emoji: "💧",
-    tone: "from-sky-200 to-cyan-100",
+    icon: "glass-water",
     available: true,
   },
   {
@@ -211,8 +218,7 @@ export const items: MenuItem[] = [
     name: "Cerveja long neck",
     description: "Bem gelada. 355 ml.",
     price: 1200,
-    emoji: "🍺",
-    tone: "from-yellow-200 to-amber-100",
+    icon: "beer",
     available: true,
   },
 
@@ -223,8 +229,7 @@ export const items: MenuItem[] = [
     name: "Petit gâteau",
     description: "Bolinho de chocolate com centro cremoso e sorvete de creme.",
     price: 2600,
-    emoji: "🍫",
-    tone: "from-amber-300 to-orange-100",
+    icon: "cookie",
     available: true,
     optionGroups: [
       {
@@ -242,8 +247,7 @@ export const items: MenuItem[] = [
     name: "Pudim de leite",
     description: "Receita da casa, com calda de caramelo.",
     price: 1600,
-    emoji: "🍮",
-    tone: "from-yellow-200 to-orange-100",
+    icon: "dessert",
     available: true,
   },
   {
@@ -252,8 +256,7 @@ export const items: MenuItem[] = [
     name: "Brownie com sorvete",
     description: "Brownie de chocolate meio amargo com bola de sorvete de baunilha.",
     price: 2200,
-    emoji: "🍨",
-    tone: "from-stone-300 to-amber-100",
+    icon: "ice-cream-bowl",
     available: false,
   },
 ];

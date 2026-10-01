@@ -8,6 +8,7 @@ import { CategoryNav } from "./CategoryNav";
 import { ItemCard } from "./ItemCard";
 import { CartBar } from "./CartBar";
 import { PageShell } from "./PageShell";
+import { Icon } from "./Icon";
 
 export function Menu() {
   const cart = useCart();
@@ -42,14 +43,18 @@ export function Menu() {
     <PageShell className="pb-44">
       <Cover />
 
-      <main className="space-y-8 px-4">
+      <main className="space-y-9 px-4">
         {categories.map((category) => (
           <section key={category.id} id={category.id} aria-labelledby={`${category.id}-titulo`} className="scroll-mt-4">
-            <h2 id={`${category.id}-titulo`} className="mb-3 flex items-center gap-2 text-xl font-bold">
-              <span aria-hidden>{category.emoji}</span>
+            <h2
+              id={`${category.id}-titulo`}
+              className="mb-3.5 flex items-center gap-2.5 px-1 font-display text-[21px] font-normal tracking-tight"
+            >
+              <Icon name={category.icon} size={20} className="text-accent" />
               {category.name}
+              <span aria-hidden className="ml-1 h-px flex-1 bg-line" />
             </h2>
-            <ul className="space-y-3">
+            <ul className="space-y-2.5">
               {items
                 .filter((item) => item.categoryId === category.id)
                 .map((item) => (

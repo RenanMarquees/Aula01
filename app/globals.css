@@ -1,8 +1,18 @@
 @import "tailwindcss";
 
-:root {
-  --background: #fffaf5;
-  --foreground: #2b1d14;
+/* Paleta do cardápio: papel marfim, tinta quente e um único acento terracota. */
+@theme {
+  --color-paper: #faf7f2;
+  --color-surface: #ffffff;
+  --color-ink: #231d19;
+  --color-muted: #6b625b;
+  --color-line: #e6ded4;
+  --color-tile: #f1ebe3;
+  --color-accent: #9c3f23;
+  --color-accent-dark: #7f3119;
+  --color-accent-soft: #f4e8e1;
+  --color-danger: #b42318;
+  --font-display: Georgia, "Iowan Old Style", "Times New Roman", serif;
 }
 
 html {
@@ -10,8 +20,8 @@ html {
 }
 
 body {
-  background: #f5ede4;
-  color: var(--foreground);
+  background: #efe9e1;
+  color: var(--color-ink);
   font-family:
     ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   -webkit-tap-highlight-color: transparent;

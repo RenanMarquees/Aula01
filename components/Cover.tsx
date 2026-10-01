@@ -1,3 +1,4 @@
+import { Icon } from "./Icon";
 import { restaurant } from "@/lib/menu-data";
 
 export function Cover() {
@@ -6,21 +7,22 @@ export function Cover() {
       {/* Foto de capa provisória: troque pela foto real no painel (Etapa 4). */}
       <div
         aria-hidden
-        className="relative h-44 overflow-hidden bg-gradient-to-br from-orange-600 via-orange-500 to-amber-400"
+        className="relative h-36 overflow-hidden bg-gradient-to-br from-[#2b1f19] via-[#3b2a20] to-[#5a3a28]"
       >
-        <span className="absolute -left-2 top-4 rotate-[-12deg] text-6xl opacity-25">🍕</span>
-        <span className="absolute left-1/3 top-16 rotate-[8deg] text-7xl opacity-20">🍔</span>
-        <span className="absolute right-4 top-3 rotate-[14deg] text-6xl opacity-25">🥗</span>
-        <span className="absolute -bottom-3 right-1/3 text-7xl opacity-20">🍰</span>
+        <Icon name="utensils" size={120} strokeWidth={0.8} className="absolute -right-4 -top-2 rotate-12 text-white/10" />
+        <Icon name="wheat" size={90} strokeWidth={0.8} className="absolute left-6 top-10 -rotate-12 text-white/10" />
+        <Icon name="cake-slice" size={72} strokeWidth={0.8} className="absolute bottom-2 left-1/2 rotate-6 text-white/10" />
       </div>
 
-      <div className="relative px-4 pb-4">
-        <div className="-mt-10 flex h-20 w-20 items-center justify-center rounded-full border-4 border-[var(--background)] bg-white text-4xl shadow-md">
-          <span aria-hidden>{restaurant.logoEmoji}</span>
+      <div className="relative px-5 pb-5">
+        <div className="-mt-8 flex h-16 w-16 items-center justify-center rounded-full border-[3px] border-paper bg-surface text-accent shadow-sm ring-1 ring-line">
+          <Icon name="utensils" size={26} />
           <span className="sr-only">Logo do {restaurant.name}</span>
         </div>
-        <h1 className="mt-2 text-2xl font-bold tracking-tight">{restaurant.name}</h1>
-        <p className="mt-0.5 text-sm text-stone-600">{restaurant.tagline}</p>
+        <h1 className="mt-3 font-display text-[26px] font-normal leading-tight tracking-tight">
+          {restaurant.name}
+        </h1>
+        <p className="mt-1 text-[13px] text-muted">{restaurant.tagline}</p>
       </div>
     </header>
   );

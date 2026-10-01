@@ -1,5 +1,6 @@
 "use client";
 
+import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 type Props = {
@@ -21,9 +22,9 @@ export function BackButton({ className = "", label = "Voltar" }: Props) {
       type="button"
       onClick={goBack}
       aria-label={label}
-      className={`flex h-11 w-11 items-center justify-center rounded-full bg-white text-xl shadow-md ring-1 ring-stone-200 active:bg-stone-100 ${className}`}
+      className={`flex h-11 w-11 items-center justify-center rounded-full border border-line bg-surface/95 text-ink backdrop-blur active:bg-tile ${className}`}
     >
-      <span aria-hidden>←</span>
+      <ArrowLeft size={19} strokeWidth={1.6} aria-hidden />
     </button>
   );
 }
