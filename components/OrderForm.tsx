@@ -140,7 +140,7 @@ export function OrderForm({ order, zones, errors, onChange }: Props) {
                 <option value="">Selecione o bairro</option>
                 {zones.map((zone) => (
                   <option key={zone.id} value={zone.id}>
-                    {zone.name} · taxa {formatPrice(zone.fee)}
+                    {zone.name} · {zone.fee > 0 ? `taxa ${formatPrice(zone.fee)}` : "entrega grátis"}
                   </option>
                 ))}
               </select>

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ShoppingBag, Trash2 } from "lucide-react";
 import { useCart } from "@/lib/cart";
-import { byPosition, describeChoices, findItem, formatPrice, unitPrice } from "@/lib/menu-helpers";
+import { byPosition, describeChoices, findItem, findZone, formatPrice, unitPrice } from "@/lib/menu-helpers";
 import { fieldLabels, firstError, validateOrder } from "@/lib/order";
 import type { MenuData } from "@/lib/types";
 import { BackButton } from "./BackButton";
@@ -185,7 +185,11 @@ function CartBody({ menu }: { menu: MenuData }) {
                   <div className="flex items-baseline justify-between text-[13px] text-muted">
                     <span>Taxa de entrega</span>
                     <span className="tabular-nums">
-                      {cart.fee > 0 ? formatPrice(cart.fee) : "escolha o bairro"}
+                      {!findZone(menu, cart.order.zoneId)
+                        ? "escolha o bairro"
+                        : cart.fee > 0
+                          ? formatPrice(cart.fee)
+                          : "grátis"}
                     </span>
                   </div>
                 )}

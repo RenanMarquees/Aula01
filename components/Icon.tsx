@@ -21,6 +21,26 @@ import {
 import Image from "next/image";
 import type { IconName, MenuItem } from "@/lib/types";
 
+/** Nomes em português, usados pelo painel do dono. */
+export const iconLabels: Record<IconName, string> = {
+  utensils: "Talheres",
+  salad: "Salada",
+  sandwich: "Sanduíche",
+  soup: "Sopa",
+  beef: "Carne",
+  fish: "Peixe",
+  hamburger: "Hambúrguer",
+  cookie: "Biscoito",
+  citrus: "Cítrico",
+  "cup-soda": "Refrigerante",
+  "glass-water": "Água",
+  beer: "Cerveja",
+  "cake-slice": "Bolo",
+  dessert: "Sobremesa",
+  "ice-cream-bowl": "Sorvete",
+  wheat: "Trigo",
+};
+
 const icons: Record<IconName, LucideIcon> = {
   utensils: Utensils,
   salad: Salad,

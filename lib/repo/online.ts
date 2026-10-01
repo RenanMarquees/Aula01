@@ -34,6 +34,11 @@ type ZoneRow = { id: string; name: string; fee_cents: number; position: number }
 const asIcon = (value: string): IconName =>
   (iconNames as readonly string[]).includes(value) ? (value as IconName) : "utensils";
 
+/** Postgres usa 23001 (restrict) ou 23503 (foreign key) quando algo ainda é usado por outra ficha. */
+function isInUse(error: { code?: string } | null): boolean {
+  return error?.code === "23001" || error?.code === "23503";
+}
+
 /** Traduz erros técnicos em frases que o dono entende. */
 function friendly(error: { message?: string; code?: string; status?: number } | null, fallback: string): RepoError {
   const message = (error?.message ?? "").toLowerCase();
@@ -44,7 +49,7 @@ function friendly(error: { message?: string; code?: string; status?: number } | 
   if (error?.code === "42501" || message.includes("row-level security") || message.includes("permission")) {
     return new RepoError("Você não tem permissão para alterar o cardápio. Entre de novo com o e-mail do dono.");
   }
-  if (error?.code === "23503") {
+  if (isInUse(error)) {
     return new RepoError("Este item ainda está em uso. Remova o que depende dele primeiro.");
   }
   return new RepoError(fallback);
@@ -154,7 +159,7 @@ export function createOnlineRepo(url: string, anonKey: string): Repo {
 
     async deleteCategory(id) {
       const result = await client.from("categories").delete().eq("id", id);
-      if (result.error?.code === "23503") {
+      if (isInUse(result.error)) {
         throw new RepoError("Esta categoria ainda tem pratos. Mude ou exclua os pratos primeiro.");
       }
       check(result, "Não foi possível excluir a categoria.");
