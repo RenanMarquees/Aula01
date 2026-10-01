@@ -33,7 +33,7 @@ e-mail `dono@exemplo.com`, senha `demo1234`.
    (`insert into public.owners (email) values ('dono@seuemail.com');`) e rode `supabase/seed.sql`.
 3. Em *Authentication > Users*, crie o usuário do dono (marque *Auto Confirm User*).
 4. Copie `.env.example` para `.env.local` e preencha `NEXT_PUBLIC_SUPABASE_URL` e
-   `NEXT_PUBLIC_SUPABASE_ANON_KEY` (na Vercel, cadastre os mesmos nomes).
+   `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (na Vercel, cadastre os mesmos nomes).
 
 Segurança: qualquer pessoa **lê** o cardápio; só o e-mail cadastrado em `owners` **altera** pratos, preços,
 bairros, ajustes e fotos (regras `row level security` em `supabase/schema.sql`).

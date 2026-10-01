@@ -12,7 +12,9 @@ export function getRepo(): Repo {
   if (!instance) {
     // Precisam ser escritos exatamente assim para o Next.js "embutir" os valores no build.
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    // O Supabase chama esta chave pública de "publishable" (nome novo) ou "anon" (nome antigo).
+    const key =
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     instance = url && key ? createOnlineRepo(url, key) : createLocalRepo();
   }
   return instance;
