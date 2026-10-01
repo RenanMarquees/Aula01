@@ -124,7 +124,9 @@ function ConfirmBody({
                 {order.complement ? ` (${order.complement})` : ""}
               </Row>
             )}
-            <Row label="Pagamento">{order.payment ? paymentLabels[order.payment] : ""}</Row>
+            <Row label="Pagamento">
+              {order.type === "mesa" ? "No caixa" : order.payment ? paymentLabels[order.payment] : ""}
+            </Row>
             <Row label="Itens">{formatPrice(cart.total)}</Row>
             {order.type === "entrega" && <Row label="Entrega">{formatPrice(cart.fee)}</Row>}
             <Row label="Total" strong>

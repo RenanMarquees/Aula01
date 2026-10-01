@@ -1,6 +1,6 @@
 "use client";
 
-import { Armchair, Banknote, Bike, ChevronDown, CreditCard, QrCode, Store } from "lucide-react";
+import { Armchair, Banknote, Bike, ChevronDown, CreditCard, QrCode, Store, Wallet } from "lucide-react";
 import type { ReactNode } from "react";
 import { deliveryZones, formatPrice } from "@/lib/menu-data";
 import {
@@ -163,10 +163,19 @@ export function OrderForm({ order, errors, onChange }: Props) {
         </fieldset>
       )}
 
-      {order.type && (
+      {order.type === "mesa" && (
+        <p className="flex items-start gap-2.5 rounded-xl bg-tile p-3.5 text-[13px] leading-snug text-muted">
+          <Wallet size={17} strokeWidth={1.5} aria-hidden className="mt-px shrink-0 text-accent" />
+          <span>O pagamento é feito direto no caixa, no final da refeição.</span>
+        </p>
+      )}
+
+      {(order.type === "retirada" || order.type === "entrega") && (
         <Section id="campo-payment" title="Como você vai pagar?" error={errors.payment}>
           <p className="-mt-1 mb-2.5 text-[12px] text-muted">
-            O pagamento é feito no restaurante ou na entrega.
+            {order.type === "retirada"
+              ? "O pagamento é feito no balcão, na hora de retirar."
+              : "O pagamento é feito na entrega."}
           </p>
           <div role="radiogroup" aria-label="Forma de pagamento" className="grid grid-cols-3 gap-2">
             {paymentOptions.map(({ id, icon: IconComponent }) => {

@@ -57,8 +57,8 @@ export type MenuItem = {
 export const restaurant = {
   name: "Restaurante Exemplo",
   tagline: "Monte seu pedido e envie pelo WhatsApp",
-  /** Número que recebe os pedidos (com código do país e DDD). EXEMPLO: troque pelo número real. */
-  whatsapp: "5511999999999",
+  /** Número que recebe os pedidos (código do país 55 + DDD + número). NÚMERO DE TESTE: trocar pelo do restaurante. */
+  whatsapp: "5543999288173",
   /** Quando false, o cardápio aparece mas o envio do pedido fica bloqueado. O dono controla isso no painel (Etapa 4). */
   open: true,
 };

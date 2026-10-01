@@ -100,6 +100,9 @@ export function validateOrder(order: OrderInfo, totalWithFee: number): OrderErro
     if (!findZone(order.zoneId)) errors.zone = "Escolha o bairro";
   }
 
+  // Na mesa o pagamento é feito no caixa, então não há o que escolher.
+  if (order.type === "mesa") return errors;
+
   if (!order.payment) {
     errors.payment = "Escolha a forma de pagamento";
   } else if (order.payment === "dinheiro" && order.changeFor.trim()) {
@@ -178,7 +181,7 @@ export function buildMessage({ lines, generalNote, order }: MessageInput): strin
   }
   out.push(`*Total: ${formatPrice(total)}*`);
 
-  if (order.payment) {
+  if (order.type !== "mesa" && order.payment) {
     let payment = `Pagamento: ${paymentLabels[order.payment]}`;
     if (order.payment === "dinheiro") {
       const change = parseMoney(order.changeFor);
