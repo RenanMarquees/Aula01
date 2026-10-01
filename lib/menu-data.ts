@@ -273,3 +273,37 @@ export function formatPrice(cents: number): string {
     currency: "BRL",
   });
 }
+
+/** Escolhas do cliente: id do grupo de opções -> ids das escolhas marcadas. */
+export type Choices = Record<string, string[]>;
+
+/** Preço de uma unidade: preço do item + extras das opções marcadas. */
+export function unitPrice(item: MenuItem, choices: Choices): number {
+  const extras = (item.optionGroups ?? []).reduce((sum, group) => {
+    const picked = choices[group.id] ?? [];
+    return (
+      sum +
+      group.choices
+        .filter((choice) => picked.includes(choice.id))
+        .reduce((groupSum, choice) => groupSum + choice.price, 0)
+    );
+  }, 0);
+  return item.price + extras;
+}
+
+/** Grupos obrigatórios que ainda não têm nenhuma escolha. */
+export function missingGroups(item: MenuItem, choices: Choices): OptionGroup[] {
+  return (item.optionGroups ?? []).filter(
+    (group) => group.required && (choices[group.id] ?? []).length === 0,
+  );
+}
+
+/** Texto das opções marcadas, ex.: ["Ponto da carne: Ao ponto", "Adicionais: Bacon, Ovo"]. */
+export function describeChoices(item: MenuItem, choices: Choices): string[] {
+  return (item.optionGroups ?? []).flatMap((group) => {
+    const names = group.choices
+      .filter((choice) => (choices[group.id] ?? []).includes(choice.id))
+      .map((choice) => choice.name);
+    return names.length > 0 ? [`${group.title}: ${names.join(", ")}`] : [];
+  });
+}

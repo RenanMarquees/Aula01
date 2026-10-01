@@ -1,18 +1,17 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { categories, items } from "@/lib/menu-data";
 import { useCart } from "@/lib/cart";
 import { Cover } from "./Cover";
 import { CategoryNav } from "./CategoryNav";
 import { ItemCard } from "./ItemCard";
 import { CartBar } from "./CartBar";
+import { PageShell } from "./PageShell";
 
 export function Menu() {
   const cart = useCart();
   const [activeId, setActiveId] = useState(categories[0].id);
-  const [toast, setToast] = useState<string | null>(null);
-  const toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   // Destaca na barra a categoria que está aparecendo na tela.
   useEffect(() => {
@@ -39,14 +38,8 @@ export function Menu() {
     document.getElementById(categoryId)?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  function showToast(message: string) {
-    setToast(message);
-    clearTimeout(toastTimer.current);
-    toastTimer.current = setTimeout(() => setToast(null), 2600);
-  }
-
   return (
-    <div className="mx-auto min-h-dvh w-full max-w-md bg-[var(--background)] pb-44">
+    <PageShell className="pb-44">
       <Cover />
 
       <main className="space-y-8 px-4">
@@ -63,12 +56,8 @@ export function Menu() {
                   <ItemCard
                     key={item.id}
                     item={item}
-                    qty={cart.qtyOf(item.id)}
-                    onAdd={() => cart.add(item.id)}
-                    onRemove={() => cart.remove(item.id)}
-                    onChoose={() =>
-                      showToast("Em breve: a tela de opções chega na próxima etapa.")
-                    }
+                    qty={cart.plainQtyOf(item.id)}
+                    onChangeQty={(delta) => cart.changePlainQty(item.id, delta)}
                   />
                 ))}
             </ul>
@@ -76,21 +65,8 @@ export function Menu() {
         ))}
       </main>
 
-      {toast && (
-        <div
-          role="status"
-          className="fixed inset-x-0 bottom-[calc(8.5rem+env(safe-area-inset-bottom))] z-40 flex justify-center px-4"
-        >
-          <p className="rounded-full bg-stone-900 px-4 py-2 text-sm text-white shadow-lg">{toast}</p>
-        </div>
-      )}
-
-      <CartBar
-        count={cart.count}
-        total={cart.total}
-        onOpen={() => showToast("Em breve: a tela do carrinho chega na próxima etapa.")}
-      />
+      <CartBar count={cart.count} total={cart.total} />
       <CategoryNav categories={categories} activeId={activeId} onSelect={goTo} />
-    </div>
+    </PageShell>
   );
 }

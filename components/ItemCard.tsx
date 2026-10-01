@@ -1,15 +1,17 @@
+import Link from "next/link";
 import { formatPrice, isSimple, type MenuItem } from "@/lib/menu-data";
+import { QtyStepper } from "./QtyStepper";
 
 type Props = {
   item: MenuItem;
+  /** Unidades do item simples já no carrinho (usado pelo seletor − 2 +). */
   qty: number;
-  onAdd: () => void;
-  onRemove: () => void;
-  onChoose: () => void;
+  onChangeQty: (delta: number) => void;
 };
 
-export function ItemCard({ item, qty, onAdd, onRemove, onChoose }: Props) {
+export function ItemCard({ item, qty, onChangeQty }: Props) {
   const simple = isSimple(item);
+  const href = `/item/${item.id}`;
 
   return (
     <li
@@ -18,18 +20,22 @@ export function ItemCard({ item, qty, onAdd, onRemove, onChoose }: Props) {
       }`}
     >
       {/* Foto provisória: troque pela foto real no painel (Etapa 4). */}
-      <div
-        aria-hidden
-        className={`flex h-24 w-24 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-5xl ${item.tone}`}
-      >
-        {item.emoji}
-      </div>
+      <Wrapper available={item.available} href={href} tabIndex={-1} ariaHidden className="shrink-0">
+        <div
+          aria-hidden
+          className={`flex h-24 w-24 items-center justify-center rounded-xl bg-gradient-to-br text-5xl ${item.tone}`}
+        >
+          {item.emoji}
+        </div>
+      </Wrapper>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <h3 className="font-semibold leading-snug">{item.name}</h3>
-        <p className="mt-0.5 line-clamp-2 text-sm leading-snug text-stone-600">
-          {item.description}
-        </p>
+        <Wrapper available={item.available} href={href}>
+          <h3 className="font-semibold leading-snug">{item.name}</h3>
+          <p className="mt-0.5 line-clamp-2 text-sm leading-snug text-stone-600">
+            {item.description}
+          </p>
+        </Wrapper>
 
         <div className="mt-auto flex items-end justify-between gap-2 pt-2">
           <div>
@@ -42,39 +48,56 @@ export function ItemCard({ item, qty, onAdd, onRemove, onChoose }: Props) {
               Esgotado hoje
             </span>
           ) : simple && qty > 0 ? (
-            <div className="flex items-center rounded-full bg-orange-50 ring-1 ring-orange-200">
-              <button
-                type="button"
-                onClick={onRemove}
-                aria-label={`Tirar uma unidade de ${item.name}`}
-                className="flex h-11 w-11 items-center justify-center rounded-full text-xl font-semibold text-orange-700 active:bg-orange-100"
-              >
-                −
-              </button>
-              <span aria-live="polite" className="w-6 text-center font-semibold">
-                {qty}
-              </span>
-              <button
-                type="button"
-                onClick={onAdd}
-                aria-label={`Adicionar mais uma unidade de ${item.name}`}
-                className="flex h-11 w-11 items-center justify-center rounded-full text-xl font-semibold text-orange-700 active:bg-orange-100"
-              >
-                +
-              </button>
-            </div>
-          ) : (
+            <QtyStepper
+              qty={qty}
+              label={item.name}
+              onMinus={() => onChangeQty(-1)}
+              onPlus={() => onChangeQty(1)}
+            />
+          ) : simple ? (
             <button
               type="button"
-              onClick={simple ? onAdd : onChoose}
-              aria-label={`${simple ? "Adicionar" : "Escolher opções de"} ${item.name}`}
+              onClick={() => onChangeQty(1)}
+              aria-label={`Adicionar ${item.name}`}
               className="min-h-11 rounded-full bg-orange-600 px-5 text-sm font-semibold text-white shadow-sm active:bg-orange-700"
             >
-              {simple ? "Adicionar" : "Escolher"}
+              Adicionar
             </button>
+          ) : (
+            <Link
+              href={href}
+              aria-label={`Escolher opções de ${item.name}`}
+              className="flex min-h-11 items-center rounded-full bg-orange-600 px-5 text-sm font-semibold text-white shadow-sm active:bg-orange-700"
+            >
+              Escolher
+            </Link>
           )}
         </div>
       </div>
     </li>
+  );
+}
+
+/** Torna foto e texto clicáveis (abrem o detalhe), exceto em itens esgotados. */
+function Wrapper({
+  available,
+  href,
+  children,
+  className = "",
+  tabIndex,
+  ariaHidden,
+}: {
+  available: boolean;
+  href: string;
+  children: React.ReactNode;
+  className?: string;
+  tabIndex?: number;
+  ariaHidden?: boolean;
+}) {
+  if (!available) return <div className={className}>{children}</div>;
+  return (
+    <Link href={href} tabIndex={tabIndex} aria-hidden={ariaHidden} className={`block ${className}`}>
+      {children}
+    </Link>
   );
 }
