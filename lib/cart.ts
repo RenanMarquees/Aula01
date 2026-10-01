@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { deliveryFee, emptyOrder, type OrderInfo } from "./order";
 import { findItem, unitPrice, type Choices } from "./menu-data";
 
 export type CartLine = {
@@ -16,11 +17,14 @@ type CartState = {
   lines: CartLine[];
   /** Observação geral do pedido (aparece no carrinho). */
   generalNote: string;
+  /** Mesa/retirada/entrega, nome, endereço e pagamento. */
+  order: OrderInfo;
 };
 
 // v2: a partir da Etapa 2 as linhas guardam opções e observação.
+// (A Etapa 3 só acrescentou o campo "order", lido com valores padrão quando falta.)
 const STORAGE_KEY = "cardapio:carrinho:v2";
-const EMPTY: CartState = { lines: [], generalNote: "" };
+const EMPTY: CartState = { lines: [], generalNote: "", order: emptyOrder };
 
 let cache: CartState | null = null;
 const listeners = new Set<() => void>();
@@ -58,6 +62,28 @@ function sanitizeLine(raw: unknown): CartLine | null {
   };
 }
 
+function sanitizeOrder(raw: unknown): OrderInfo {
+  const saved = (raw ?? {}) as Partial<OrderInfo>;
+  const text = (value: unknown) => (typeof value === "string" ? value : "");
+  return {
+    type:
+      saved.type === "mesa" || saved.type === "retirada" || saved.type === "entrega"
+        ? saved.type
+        : null,
+    name: text(saved.name),
+    table: text(saved.table),
+    zoneId: text(saved.zoneId),
+    street: text(saved.street),
+    number: text(saved.number),
+    complement: text(saved.complement),
+    payment:
+      saved.payment === "pix" || saved.payment === "cartao" || saved.payment === "dinheiro"
+        ? saved.payment
+        : null,
+    changeFor: text(saved.changeFor),
+  };
+}
+
 function read(): CartState {
   if (cache) return cache;
   try {
@@ -69,9 +95,10 @@ function read(): CartState {
     cache = {
       lines,
       generalNote: typeof parsed?.generalNote === "string" ? parsed.generalNote : "",
+      order: sanitizeOrder(parsed?.order),
     };
   } catch {
-    cache = { lines: [], generalNote: "" };
+    cache = { lines: [], generalNote: "", order: emptyOrder };
   }
   return cache;
 }
@@ -123,6 +150,18 @@ function setGeneralNote(generalNote: string) {
   write({ ...read(), generalNote });
 }
 
+/** Atualiza só os campos informados (ex.: { name: "Maria" }). */
+export function updateOrder(patch: Partial<OrderInfo>) {
+  const state = read();
+  write({ ...state, order: { ...state.order, ...patch } });
+}
+
+/** Depois de enviar: esvazia os itens e a observação, mas lembra nome, mesa e endereço. */
+function clearItems() {
+  const state = read();
+  write({ ...state, lines: [], generalNote: "", order: { ...state.order, payment: null, changeFor: "" } });
+}
+
 // "Pronto" fica falso no servidor e verdadeiro no celular: evita mostrar
 // "carrinho vazio" por um instante antes de ler o que está guardado.
 const noopSubscribe = () => () => {};
@@ -136,13 +175,19 @@ export function useCart() {
     const item = findItem(line.itemId);
     return sum + (item ? unitPrice(item, line.choices) * line.qty : 0);
   }, 0);
+  const fee = deliveryFee(state.order);
 
   return {
     ready,
     lines: state.lines,
     generalNote: state.generalNote,
+    order: state.order,
     count,
+    /** Soma dos itens (sem taxa de entrega). */
     total,
+    /** Taxa de entrega do bairro escolhido (0 se não for entrega). */
+    fee,
+    totalWithFee: total + fee,
     /** Unidades do item "puro" (sem opções e sem observação), usadas pelo botão da lista. */
     plainQtyOf: (itemId: string) =>
       state.lines.find((line) => line.key === makeKey(itemId, {}, ""))?.qty ?? 0,
@@ -151,5 +196,7 @@ export function useCart() {
     addLine,
     changeQty,
     setGeneralNote,
+    updateOrder,
+    clearItems,
   };
 }

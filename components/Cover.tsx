@@ -1,4 +1,6 @@
+import { ClockAlert } from "lucide-react";
 import { Icon } from "./Icon";
+import { TableBadge } from "./TableBadge";
 import { restaurant } from "@/lib/menu-data";
 
 export function Cover() {
@@ -15,14 +17,24 @@ export function Cover() {
       </div>
 
       <div className="relative px-5 pb-5">
-        <div className="-mt-8 flex h-16 w-16 items-center justify-center rounded-full border-[3px] border-paper bg-surface text-accent shadow-sm ring-1 ring-line">
-          <Icon name="utensils" size={26} />
-          <span className="sr-only">Logo do {restaurant.name}</span>
+        <div className="-mt-8 flex items-end justify-between">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full border-[3px] border-paper bg-surface text-accent shadow-sm ring-1 ring-line">
+            <Icon name="utensils" size={26} />
+            <span className="sr-only">Logo do {restaurant.name}</span>
+          </div>
+          <TableBadge />
         </div>
         <h1 className="mt-3 font-display text-[26px] font-normal leading-tight tracking-tight">
           {restaurant.name}
         </h1>
         <p className="mt-1 text-[13px] text-muted">{restaurant.tagline}</p>
+        {!restaurant.open && (
+          <p className="mt-3 flex items-start gap-2.5 rounded-xl bg-accent-soft p-3 text-[13px] leading-snug text-accent-dark">
+            <ClockAlert size={17} strokeWidth={1.5} aria-hidden className="mt-px shrink-0" />
+            Estamos fechados no momento. Você pode ver o cardápio, mas o envio de pedidos volta quando
+            abrirmos.
+          </p>
+        )}
       </div>
     </header>
   );

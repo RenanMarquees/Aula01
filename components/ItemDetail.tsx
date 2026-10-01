@@ -143,7 +143,7 @@ export function ItemDetail({ item }: { item: MenuItem }) {
             maxLength={140}
             rows={2}
             placeholder="Ex.: sem cebola, molho à parte…"
-            className="w-full resize-none rounded-xl border border-line bg-surface p-3 text-[14px] placeholder:text-muted/70 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/15"
+            className="w-full resize-none rounded-xl border border-line bg-surface p-3 text-[16px] placeholder:text-muted/70 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/15"
           />
           <p className="mt-1 text-right text-[11px] tabular-nums text-muted">{note.length}/140</p>
         </div>

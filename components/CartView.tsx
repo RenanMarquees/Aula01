@@ -1,20 +1,39 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { ShoppingBag } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { describeChoices, findItem, formatPrice, unitPrice } from "@/lib/menu-data";
-import { showToast } from "@/lib/toast";
+import { fieldLabels, firstError, validateOrder } from "@/lib/order";
 import { BackButton } from "./BackButton";
 import { PhotoPlaceholder } from "./Icon";
+import { OrderForm } from "./OrderForm";
 import { PageShell } from "./PageShell";
 import { QtyStepper } from "./QtyStepper";
 
 export function CartView() {
+  const router = useRouter();
   const cart = useCart();
+  const [showErrors, setShowErrors] = useState(false);
+
+  const allErrors = validateOrder(cart.order, cart.totalWithFee);
+  const missing = firstError(allErrors);
+
+  function handleContinue() {
+    if (missing) {
+      setShowErrors(true);
+      document
+        .getElementById(`campo-${missing}`)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    router.push("/confirmacao");
+  }
 
   return (
-    <PageShell className="pb-36">
+    <PageShell className="pb-52">
       <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-line bg-paper/95 px-3 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))] backdrop-blur">
         <BackButton label="Voltar ao cardápio" />
         <h1 className="font-display text-[21px] font-normal tracking-tight">Seu pedido</h1>
@@ -95,23 +114,48 @@ export function CartView() {
                 maxLength={200}
                 rows={3}
                 placeholder="Ex.: trazer os pratos juntos, alergia a amendoim…"
-                className="w-full resize-none rounded-xl border border-line bg-surface p-3 text-[14px] placeholder:text-muted/70 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/15"
+                className="w-full resize-none rounded-xl border border-line bg-surface p-3 text-[16px] placeholder:text-muted/70 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/15"
               />
             </div>
+
+            <OrderForm
+              order={cart.order}
+              errors={showErrors ? allErrors : {}}
+              onChange={cart.updateOrder}
+            />
           </main>
 
           <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
-            <div className="mx-auto max-w-md space-y-2.5 p-3">
-              <div className="flex items-baseline justify-between px-1">
-                <span className="text-[13px] text-muted">Subtotal</span>
-                <span className="font-display text-[22px] tabular-nums">{formatPrice(cart.total)}</span>
+            <div className="mx-auto max-w-md space-y-2 p-3">
+              <div className="space-y-0.5 px-1">
+                <div className="flex items-baseline justify-between text-[13px] text-muted">
+                  <span>Subtotal</span>
+                  <span className="tabular-nums">{formatPrice(cart.total)}</span>
+                </div>
+                {cart.order.type === "entrega" && (
+                  <div className="flex items-baseline justify-between text-[13px] text-muted">
+                    <span>Taxa de entrega</span>
+                    <span className="tabular-nums">
+                      {cart.fee > 0 ? formatPrice(cart.fee) : "escolha o bairro"}
+                    </span>
+                  </div>
+                )}
+                <div className="flex items-baseline justify-between pt-0.5">
+                  <span className="text-[13px] font-medium">Total</span>
+                  <span className="font-display text-[22px] tabular-nums">
+                    {formatPrice(cart.totalWithFee)}
+                  </span>
+                </div>
               </div>
               <button
                 type="button"
-                onClick={() => showToast("Em breve: escolha de mesa, retirada ou entrega.")}
-                className="min-h-12 w-full rounded-full bg-accent text-[14px] font-medium tracking-wide text-white active:bg-accent-dark"
+                onClick={handleContinue}
+                aria-disabled={missing !== null}
+                className={`min-h-12 w-full rounded-full text-[14px] font-medium tracking-wide text-white ${
+                  missing ? "bg-muted/60" : "bg-accent active:bg-accent-dark"
+                }`}
               >
-                Continuar
+                {missing ? `Complete: ${fieldLabels[missing]}` : "Revisar pedido"}
               </button>
             </div>
           </div>

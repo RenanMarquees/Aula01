@@ -57,7 +57,26 @@ export type MenuItem = {
 export const restaurant = {
   name: "Restaurante Exemplo",
   tagline: "Monte seu pedido e envie pelo WhatsApp",
+  /** Número que recebe os pedidos (com código do país e DDD). EXEMPLO: troque pelo número real. */
+  whatsapp: "5511999999999",
+  /** Quando false, o cardápio aparece mas o envio do pedido fica bloqueado. O dono controla isso no painel (Etapa 4). */
+  open: true,
 };
+
+export type DeliveryZone = {
+  id: string;
+  name: string;
+  /** Taxa de entrega em centavos. */
+  fee: number;
+};
+
+/** Bairros atendidos e taxa de cada um. O dono edita no painel (Etapa 4). */
+export const deliveryZones: DeliveryZone[] = [
+  { id: "centro", name: "Centro", fee: 500 },
+  { id: "jardim-america", name: "Jardim América", fee: 700 },
+  { id: "vila-nova", name: "Vila Nova", fee: 800 },
+  { id: "bela-vista", name: "Bela Vista", fee: 1000 },
+];
 
 export const categories: Category[] = [
   { id: "entradas", name: "Entradas", icon: "salad" },
