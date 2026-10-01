@@ -5,17 +5,18 @@ import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { ClockAlert, Info, MessageCircle, ShoppingBag, TriangleAlert } from "lucide-react";
 import { useCart } from "@/lib/cart";
-import { formatPrice, restaurant } from "@/lib/menu-data";
+import { findZone, formatPrice } from "@/lib/menu-helpers";
 import {
   buildMessage,
-  findZone,
   orderTypeLabels,
   paymentLabels,
   validateOrder,
   whatsappUrl,
 } from "@/lib/order";
 import { showToast } from "@/lib/toast";
+import type { MenuData } from "@/lib/types";
 import { BackButton } from "./BackButton";
+import { MenuGate } from "./MenuGate";
 import { PageShell } from "./PageShell";
 
 /** Transforma *texto* em negrito, do mesmo jeito que o WhatsApp mostra. */
@@ -30,12 +31,17 @@ function renderWhatsAppText(message: string): ReactNode[] {
 }
 
 export function ConfirmView() {
+  return <MenuGate>{(menu) => <ConfirmInner menu={menu} />}</MenuGate>;
+}
+
+function ConfirmInner({ menu }: { menu: MenuData }) {
   const router = useRouter();
   const cart = useCart();
   const [sent, setSent] = useState(false);
 
-  const errors = validateOrder(cart.order, cart.totalWithFee);
-  const incomplete = Object.keys(errors).length > 0;
+  const errors = validateOrder(cart.order, cart.totalWithFee, menu);
+  const incomplete =
+    Object.keys(errors).length > 0 || cart.unavailableCount > 0 || cart.count === 0;
 
   function startOver() {
     cart.clearItems();
@@ -69,6 +75,7 @@ export function ConfirmView() {
       ) : (
         <ConfirmBody
           cart={cart}
+          menu={menu}
           sent={sent}
           onSend={() => setSent(true)}
           onStartOver={startOver}
@@ -80,23 +87,26 @@ export function ConfirmView() {
 
 function ConfirmBody({
   cart,
+  menu,
   sent,
   onSend,
   onStartOver,
 }: {
   cart: ReturnType<typeof useCart>;
+  menu: MenuData;
   sent: boolean;
   onSend: () => void;
   onStartOver: () => void;
 }) {
   const { order } = cart;
-  const message = buildMessage({ lines: cart.lines, generalNote: cart.generalNote, order });
-  const zone = findZone(order.zoneId);
+  const message = buildMessage({ lines: cart.lines, generalNote: cart.generalNote, order, menu });
+  const zone = findZone(menu, order.zoneId);
+  const open = menu.settings.open;
 
   return (
     <>
       <main className="space-y-6 px-4 py-5">
-        {!restaurant.open && (
+        {!open && (
           <div
             role="alert"
             className="flex gap-3 rounded-2xl border border-line bg-accent-soft p-4 text-[13.5px] text-accent-dark"
@@ -155,9 +165,9 @@ function ConfirmBody({
 
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
         <div className="mx-auto max-w-md space-y-2 p-3">
-          {restaurant.open ? (
+          {open ? (
             <a
-              href={whatsappUrl(message)}
+              href={whatsappUrl(message, menu.settings.whatsapp)}
               target="_blank"
               rel="noopener noreferrer"
               onClick={onSend}

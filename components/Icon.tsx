@@ -18,7 +18,8 @@ import {
   type LucideIcon,
   type LucideProps,
 } from "lucide-react";
-import type { IconName } from "@/lib/menu-data";
+import Image from "next/image";
+import type { IconName, MenuItem } from "@/lib/types";
 
 const icons: Record<IconName, LucideIcon> = {
   utensils: Utensils,
@@ -61,6 +62,24 @@ export function PhotoPlaceholder({
       className={`flex items-center justify-center bg-tile text-accent/70 ${className}`}
     >
       <Icon name={name} size={size} strokeWidth={1.2} />
+    </div>
+  );
+}
+
+/** Foto do prato; sem foto, mostra o ícone escolhido. */
+export function ItemPhoto({
+  item,
+  className = "",
+  iconSize = 36,
+}: {
+  item: Pick<MenuItem, "photoUrl" | "icon">;
+  className?: string;
+  iconSize?: number;
+}) {
+  if (!item.photoUrl) return <PhotoPlaceholder name={item.icon} size={iconSize} className={className} />;
+  return (
+    <div aria-hidden className={`relative overflow-hidden bg-tile ${className}`}>
+      <Image src={item.photoUrl} alt="" fill sizes="(max-width: 448px) 100vw, 448px" unoptimized className="object-cover" />
     </div>
   );
 }

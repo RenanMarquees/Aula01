@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { MenuBootstrap } from "@/components/MenuBootstrap";
 import { Toaster } from "@/components/Toaster";
 import "./globals.css";
 
@@ -18,6 +19,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="pt-BR" className="h-full antialiased">
       <body className="min-h-full">
         {children}
+        <MenuBootstrap />
         <Toaster />
       </body>
     </html>

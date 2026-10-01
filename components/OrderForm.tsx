@@ -2,7 +2,8 @@
 
 import { Armchair, Banknote, Bike, ChevronDown, CreditCard, QrCode, Store, Wallet } from "lucide-react";
 import type { ReactNode } from "react";
-import { deliveryZones, formatPrice } from "@/lib/menu-data";
+import { formatPrice } from "@/lib/menu-helpers";
+import type { DeliveryZone } from "@/lib/types";
 import {
   type OrderErrors,
   type OrderInfo,
@@ -14,6 +15,8 @@ import {
 
 type Props = {
   order: OrderInfo;
+  /** Bairros atendidos, na ordem em que o dono definiu. */
+  zones: DeliveryZone[];
   /** Erros que devem aparecer na tela (vazio até o cliente tentar continuar). */
   errors: OrderErrors;
   onChange: (patch: Partial<OrderInfo>) => void;
@@ -35,7 +38,7 @@ const paymentOptions: { id: PaymentMethod; icon: typeof QrCode }[] = [
 const inputClass =
   "w-full rounded-xl border bg-surface px-3.5 text-[16px] placeholder:text-muted/70 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/15 min-h-12";
 
-export function OrderForm({ order, errors, onChange }: Props) {
+export function OrderForm({ order, zones, errors, onChange }: Props) {
   return (
     <div className="space-y-6">
       <Section id="campo-type" title="Como você quer receber?" error={errors.type}>
@@ -135,7 +138,7 @@ export function OrderForm({ order, errors, onChange }: Props) {
                 }`}
               >
                 <option value="">Selecione o bairro</option>
-                {deliveryZones.map((zone) => (
+                {zones.map((zone) => (
                   <option key={zone.id} value={zone.id}>
                     {zone.name} · taxa {formatPrice(zone.fee)}
                   </option>

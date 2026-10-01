@@ -1,8 +1,10 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { findItem, unitPrice } from "./menu-helpers";
+import { useMenu } from "./menu-store";
 import { deliveryFee, emptyOrder, type OrderInfo } from "./order";
-import { findItem, unitPrice, type Choices } from "./menu-data";
+import type { Choices } from "./types";
 
 export type CartLine = {
   /** Identifica "o mesmo pedido": mesmo item, mesmas opções e mesma observação. */
@@ -22,7 +24,7 @@ type CartState = {
 };
 
 // v2: a partir da Etapa 2 as linhas guardam opções e observação.
-// (A Etapa 3 só acrescentou o campo "order", lido com valores padrão quando falta.)
+// (A Etapa 3 acrescentou o campo "order", lido com valores padrão quando falta.)
 const STORAGE_KEY = "cardapio:carrinho:v2";
 const EMPTY: CartState = { lines: [], generalNote: "", order: emptyOrder };
 
@@ -36,26 +38,24 @@ function makeKey(itemId: string, choices: Choices, note: string): string {
   return JSON.stringify([itemId, sorted, note.trim()]);
 }
 
+// O carrinho só guarda "o que foi escolhido". Preços e disponibilidade vêm sempre do cardápio atual.
 function sanitizeLine(raw: unknown): CartLine | null {
   const line = raw as Partial<CartLine> | null;
   if (!line || typeof line.itemId !== "string") return null;
-  const item = findItem(line.itemId);
-  if (!item || !Number.isInteger(line.qty) || (line.qty as number) < 1) return null;
+  if (!Number.isInteger(line.qty) || (line.qty as number) < 1) return null;
 
-  // Mantém só as escolhas que ainda existem no cardápio.
   const choices: Choices = {};
-  for (const group of item.optionGroups ?? []) {
-    const saved = line.choices?.[group.id];
-    if (!Array.isArray(saved)) continue;
-    const valid = group.choices
-      .map((choice) => choice.id)
-      .filter((id) => saved.includes(id));
-    if (valid.length > 0) choices[group.id] = valid;
+  if (line.choices && typeof line.choices === "object") {
+    for (const [groupId, picked] of Object.entries(line.choices)) {
+      if (Array.isArray(picked)) {
+        choices[groupId] = picked.filter((id): id is string => typeof id === "string");
+      }
+    }
   }
   const note = typeof line.note === "string" ? line.note : "";
   return {
-    key: makeKey(item.id, choices, note),
-    itemId: item.id,
+    key: makeKey(line.itemId, choices, note),
+    itemId: line.itemId,
     qty: line.qty as number,
     choices,
     note,
@@ -168,22 +168,35 @@ const noopSubscribe = () => () => {};
 
 export function useCart() {
   const state = useSyncExternalStore(subscribe, read, () => EMPTY);
-  const ready = useSyncExternalStore(noopSubscribe, () => true, () => false);
+  const hydrated = useSyncExternalStore(noopSubscribe, () => true, () => false);
+  const menuState = useMenu();
+  const menu = menuState.data;
 
-  const count = state.lines.reduce((sum, line) => sum + line.qty, 0);
-  const total = state.lines.reduce((sum, line) => {
-    const item = findItem(line.itemId);
+  // Só entram no carrinho os pratos que ainda existem no cardápio.
+  // Os pausados ficam na lista (para o cliente remover), mas não contam no total.
+  const lines = menu ? state.lines.filter((line) => findItem(menu, line.itemId)) : [];
+  const orderable = menu
+    ? lines.filter((line) => findItem(menu, line.itemId)?.available)
+    : [];
+
+  const count = orderable.reduce((sum, line) => sum + line.qty, 0);
+  const total = orderable.reduce((sum, line) => {
+    const item = menu ? findItem(menu, line.itemId) : undefined;
     return sum + (item ? unitPrice(item, line.choices) * line.qty : 0);
   }, 0);
-  const fee = deliveryFee(state.order);
+  const fee = menu ? deliveryFee(state.order, menu) : 0;
 
   return {
-    ready,
-    lines: state.lines,
+    /** Falso até o celular ler o carrinho guardado e o cardápio chegar. */
+    ready: hydrated && menu !== null,
+    lines,
+    /** Linhas cujo prato está pausado no momento. */
+    unavailableCount: lines.length - orderable.length,
     generalNote: state.generalNote,
     order: state.order,
+    /** Unidades de pratos disponíveis. */
     count,
-    /** Soma dos itens (sem taxa de entrega). */
+    /** Soma dos itens disponíveis (sem taxa de entrega). */
     total,
     /** Taxa de entrega do bairro escolhido (0 se não for entrega). */
     fee,

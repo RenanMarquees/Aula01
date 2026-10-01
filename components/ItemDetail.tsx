@@ -1,23 +1,53 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useCart } from "@/lib/cart";
 import {
+  findItem,
   formatPrice,
   missingGroups,
   unitPrice,
-  type Choices,
-  type MenuItem,
-  type OptionGroup,
-} from "@/lib/menu-data";
+} from "@/lib/menu-helpers";
 import { showToast } from "@/lib/toast";
+import type { Choices, MenuData, MenuItem, OptionGroup } from "@/lib/types";
 import { BackButton } from "./BackButton";
-import { PhotoPlaceholder } from "./Icon";
+import { ItemPhoto } from "./Icon";
+import { MenuGate } from "./MenuGate";
 import { PageShell } from "./PageShell";
 import { QtyStepper } from "./QtyStepper";
 
-export function ItemDetail({ item }: { item: MenuItem }) {
+export function ItemDetail({ id }: { id: string }) {
+  return <MenuGate>{(menu) => <ItemLookup menu={menu} id={id} />}</MenuGate>;
+}
+
+function ItemLookup({ menu, id }: { menu: MenuData; id: string }) {
+  const item = findItem(menu, id);
+
+  if (!item || !item.available) {
+    return (
+      <PageShell>
+        <div className="flex flex-col items-center px-8 py-32 text-center">
+          <h1 className="font-display text-[21px] font-normal">
+            {item ? "Este prato acabou por hoje" : "Não encontramos este prato"}
+          </h1>
+          <p className="mt-1 text-[13.5px] text-muted">Que tal escolher outro item do cardápio?</p>
+          <Link
+            href="/"
+            className="mt-7 flex min-h-12 items-center rounded-full bg-accent px-7 text-[14px] font-medium tracking-wide text-white active:bg-accent-dark"
+          >
+            Ver cardápio
+          </Link>
+        </div>
+      </PageShell>
+    );
+  }
+
+  return <ItemDetailBody item={item} />;
+}
+
+function ItemDetailBody({ item }: { item: MenuItem }) {
   const router = useRouter();
   const cart = useCart();
   const [choices, setChoices] = useState<Choices>({});
@@ -57,7 +87,7 @@ export function ItemDetail({ item }: { item: MenuItem }) {
 
   return (
     <PageShell className="pb-32">
-      <PhotoPlaceholder name={item.icon} size={72} className="h-56 w-full" />
+      <ItemPhoto item={item} iconSize={72} className="h-56 w-full" />
       <BackButton className="fixed left-3 top-[calc(0.75rem+env(safe-area-inset-top))] z-20" />
 
       <main className="space-y-5 px-5 py-6">
@@ -65,16 +95,18 @@ export function ItemDetail({ item }: { item: MenuItem }) {
           <h1 className="font-display text-[26px] font-normal leading-tight tracking-tight">
             {item.name}
           </h1>
-          <p className="mt-1.5 text-[13.5px] leading-relaxed text-muted">{item.description}</p>
+          {item.description && (
+            <p className="mt-1.5 text-[13.5px] leading-relaxed text-muted">{item.description}</p>
+          )}
           <p className="mt-3 text-[15px] font-semibold tabular-nums">
-            {item.optionGroups?.length ? (
+            {item.optionGroups.length > 0 ? (
               <span className="mr-1 text-[12px] font-normal text-muted">a partir de</span>
             ) : null}
             {formatPrice(item.price)}
           </p>
         </header>
 
-        {item.optionGroups?.map((group) => {
+        {item.optionGroups.map((group) => {
           const picked = choices[group.id] ?? [];
           const isMissing = triedToAdd && group.required && picked.length === 0;
           return (

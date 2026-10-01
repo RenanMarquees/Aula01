@@ -1,12 +1,13 @@
 import type { CartLine } from "./cart";
 import {
-  deliveryZones,
   describeChoices,
   findItem,
+  findZone,
   formatPrice,
-  restaurant,
+  parseMoney,
   unitPrice,
-} from "./menu-data";
+} from "./menu-helpers";
+import type { MenuData } from "./types";
 
 export type OrderType = "mesa" | "retirada" | "entrega";
 export type PaymentMethod = "pix" | "cartao" | "dinheiro";
@@ -64,27 +65,12 @@ export const fieldOrder = [
 export type FieldKey = (typeof fieldOrder)[number];
 export type OrderErrors = Partial<Record<FieldKey, string>>;
 
-export function findZone(zoneId: string) {
-  return deliveryZones.find((zone) => zone.id === zoneId);
-}
-
-export function deliveryFee(order: OrderInfo): number {
-  return order.type === "entrega" ? (findZone(order.zoneId)?.fee ?? 0) : 0;
-}
-
-/** "150", "150,50", "R$ 1.050,00" → centavos. Devolve null se não for um valor válido. */
-export function parseMoney(text: string): number | null {
-  const cleaned = text.replace(/[^\d.,]/g, "");
-  if (!cleaned) return null;
-  const normalized = cleaned.includes(",")
-    ? cleaned.replace(/\./g, "").replace(",", ".")
-    : cleaned;
-  const value = Number.parseFloat(normalized);
-  return Number.isFinite(value) && value > 0 ? Math.round(value * 100) : null;
+export function deliveryFee(order: OrderInfo, menu: MenuData): number {
+  return order.type === "entrega" ? (findZone(menu, order.zoneId)?.fee ?? 0) : 0;
 }
 
 /** Confere o que falta no pedido. `totalWithFee` é o total em centavos, usado no troco. */
-export function validateOrder(order: OrderInfo, totalWithFee: number): OrderErrors {
+export function validateOrder(order: OrderInfo, totalWithFee: number, menu: MenuData): OrderErrors {
   const errors: OrderErrors = {};
 
   if (!order.type) errors.type = "Escolha como quer receber o pedido";
@@ -97,7 +83,7 @@ export function validateOrder(order: OrderInfo, totalWithFee: number): OrderErro
   if (order.type === "entrega") {
     if (order.street.trim().length < 3) errors.street = "Informe a rua";
     if (!order.number.trim()) errors.number = "Informe o número";
-    if (!findZone(order.zoneId)) errors.zone = "Escolha o bairro";
+    if (!findZone(menu, order.zoneId)) errors.zone = "Escolha o bairro";
   }
 
   // Na mesa o pagamento é feito no caixa, então não há o que escolher.
@@ -138,19 +124,20 @@ type MessageInput = {
   lines: CartLine[];
   generalNote: string;
   order: OrderInfo;
+  menu: MenuData;
 };
 
 /** Texto do pedido que vai pronto no WhatsApp (*asteriscos* viram negrito lá). */
-export function buildMessage({ lines, generalNote, order }: MessageInput): string {
+export function buildMessage({ lines, generalNote, order, menu }: MessageInput): string {
   const subtotal = lines.reduce((sum, line) => {
-    const item = findItem(line.itemId);
+    const item = findItem(menu, line.itemId);
     return sum + (item ? unitPrice(item, line.choices) * line.qty : 0);
   }, 0);
-  const fee = deliveryFee(order);
+  const fee = deliveryFee(order, menu);
   const total = subtotal + fee;
 
   const out: string[] = [];
-  out.push(`*NOVO PEDIDO - ${restaurant.name}*`);
+  out.push(`*NOVO PEDIDO - ${menu.settings.name}*`);
 
   if (order.type === "mesa") out.push(`*Mesa ${order.table.trim()}*`);
   if (order.type === "retirada") out.push("*Retirada no balcão*");
@@ -158,7 +145,7 @@ export function buildMessage({ lines, generalNote, order }: MessageInput): strin
   out.push(`Cliente: ${order.name.trim()}`);
 
   if (order.type === "entrega") {
-    const zone = findZone(order.zoneId);
+    const zone = findZone(menu, order.zoneId);
     const address = `${order.street.trim()}, ${order.number.trim()} - ${zone?.name ?? ""}`;
     out.push(`Endereço: ${address}`);
     if (order.complement.trim()) out.push(`Complemento: ${order.complement.trim()}`);
@@ -166,7 +153,7 @@ export function buildMessage({ lines, generalNote, order }: MessageInput): strin
 
   out.push("", "*Itens*");
   for (const line of lines) {
-    const item = findItem(line.itemId);
+    const item = findItem(menu, line.itemId);
     if (!item) continue;
     out.push(`${line.qty}x ${item.name} - ${formatPrice(unitPrice(item, line.choices) * line.qty)}`);
     for (const detail of describeChoices(item, line.choices)) out.push(`   ${detail}`);
@@ -177,7 +164,7 @@ export function buildMessage({ lines, generalNote, order }: MessageInput): strin
 
   out.push("", `Subtotal: ${formatPrice(subtotal)}`);
   if (order.type === "entrega") {
-    out.push(`Taxa de entrega (${findZone(order.zoneId)?.name ?? ""}): ${formatPrice(fee)}`);
+    out.push(`Taxa de entrega (${findZone(menu, order.zoneId)?.name ?? ""}): ${formatPrice(fee)}`);
   }
   out.push(`*Total: ${formatPrice(total)}*`);
 
@@ -193,6 +180,7 @@ export function buildMessage({ lines, generalNote, order }: MessageInput): strin
   return clean(out.join("\n"));
 }
 
-export function whatsappUrl(message: string): string {
-  return `https://wa.me/${restaurant.whatsapp}?text=${encodeURIComponent(message)}`;
+/** Link que abre o WhatsApp do restaurante com a mensagem pronta. */
+export function whatsappUrl(message: string, whatsapp: string): string {
+  return `https://wa.me/${whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(message)}`;
 }

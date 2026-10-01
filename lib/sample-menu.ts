@@ -1,88 +1,34 @@
-// Dados de exemplo. Na Etapa 4, o dono passa a editar tudo isso pelo painel.
+import type { Category, DeliveryZone, MenuData, MenuItem, OptionGroup, Settings } from "./types";
 
-/** Nomes dos ícones de traço fino (veja components/Icon.tsx). */
-export type IconName =
-  | "utensils"
-  | "salad"
-  | "sandwich"
-  | "soup"
-  | "beef"
-  | "fish"
-  | "hamburger"
-  | "cookie"
-  | "citrus"
-  | "cup-soda"
-  | "glass-water"
-  | "beer"
-  | "cake-slice"
-  | "dessert"
-  | "ice-cream-bowl"
-  | "wheat";
+// Cardápio de exemplo. Serve de "fichário de rascunho" (modo demonstração) e de ponto de partida
+// do fichário online (veja supabase/seed.sql, gerado a partir deste arquivo).
 
-export type Category = {
-  id: string;
-  name: string;
-  icon: IconName;
-};
-
-export type OptionChoice = {
-  id: string;
-  name: string;
-  /** Valor extra em centavos (0 = sem custo adicional). */
-  price: number;
-};
-
-export type OptionGroup = {
-  id: string;
-  title: string;
-  required: boolean;
-  /** "single" = escolhe uma; "multiple" = escolhe várias. */
-  type: "single" | "multiple";
-  choices: OptionChoice[];
-};
-
-export type MenuItem = {
-  id: string;
-  categoryId: string;
-  name: string;
-  description: string;
-  /** Preço em centavos, para evitar erros de arredondamento. */
-  price: number;
-  /** Ícone mostrado no lugar da foto, até o dono enviar a foto real. */
-  icon: IconName;
-  available: boolean;
+type RawItem = Omit<MenuItem, "photoUrl" | "position" | "optionGroups"> & {
   optionGroups?: OptionGroup[];
 };
 
-export const restaurant = {
+const settings: Settings = {
   name: "Restaurante Exemplo",
   tagline: "Monte seu pedido e envie pelo WhatsApp",
-  /** Número que recebe os pedidos (código do país 55 + DDD + número). NÚMERO DE TESTE: trocar pelo do restaurante. */
+  // Número de TESTE (código do país 55 + DDD + número). O dono troca pelo real no painel.
   whatsapp: "5543999288173",
-  /** Quando false, o cardápio aparece mas o envio do pedido fica bloqueado. O dono controla isso no painel (Etapa 4). */
   open: true,
+  logoUrl: null,
+  coverUrl: null,
 };
 
-export type DeliveryZone = {
-  id: string;
-  name: string;
-  /** Taxa de entrega em centavos. */
-  fee: number;
-};
-
-/** Bairros atendidos e taxa de cada um. O dono edita no painel (Etapa 4). */
-export const deliveryZones: DeliveryZone[] = [
-  { id: "centro", name: "Centro", fee: 500 },
-  { id: "jardim-america", name: "Jardim América", fee: 700 },
-  { id: "vila-nova", name: "Vila Nova", fee: 800 },
-  { id: "bela-vista", name: "Bela Vista", fee: 1000 },
+const zones: DeliveryZone[] = [
+  { id: "centro", name: "Centro", fee: 500, position: 0 },
+  { id: "jardim-america", name: "Jardim América", fee: 700, position: 1 },
+  { id: "vila-nova", name: "Vila Nova", fee: 800, position: 2 },
+  { id: "bela-vista", name: "Bela Vista", fee: 1000, position: 3 },
 ];
 
-export const categories: Category[] = [
-  { id: "entradas", name: "Entradas", icon: "salad" },
-  { id: "pratos", name: "Pratos", icon: "utensils" },
-  { id: "bebidas", name: "Bebidas", icon: "cup-soda" },
-  { id: "sobremesas", name: "Sobremesas", icon: "cake-slice" },
+const categories: Category[] = [
+  { id: "entradas", name: "Entradas", icon: "salad", position: 0 },
+  { id: "pratos", name: "Pratos", icon: "utensils", position: 1 },
+  { id: "bebidas", name: "Bebidas", icon: "cup-soda", position: 2 },
+  { id: "sobremesas", name: "Sobremesas", icon: "cake-slice", position: 3 },
 ];
 
 const pontoDaCarne: OptionGroup = {
@@ -97,7 +43,7 @@ const pontoDaCarne: OptionGroup = {
   ],
 };
 
-export const items: MenuItem[] = [
+const rawItems: RawItem[] = [
   // Entradas
   {
     id: "bruschetta",
@@ -280,52 +226,16 @@ export const items: MenuItem[] = [
   },
 ];
 
-export function findItem(id: string): MenuItem | undefined {
-  return items.find((item) => item.id === id);
-}
-
-/** Um item "simples" não tem opções e entra no carrinho com um toque. */
-export function isSimple(item: MenuItem): boolean {
-  return !item.optionGroups || item.optionGroups.length === 0;
-}
-
-export function formatPrice(cents: number): string {
-  return (cents / 100).toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  });
-}
-
-/** Escolhas do cliente: id do grupo de opções -> ids das escolhas marcadas. */
-export type Choices = Record<string, string[]>;
-
-/** Preço de uma unidade: preço do item + extras das opções marcadas. */
-export function unitPrice(item: MenuItem, choices: Choices): number {
-  const extras = (item.optionGroups ?? []).reduce((sum, group) => {
-    const picked = choices[group.id] ?? [];
-    return (
-      sum +
-      group.choices
-        .filter((choice) => picked.includes(choice.id))
-        .reduce((groupSum, choice) => groupSum + choice.price, 0)
-    );
-  }, 0);
-  return item.price + extras;
-}
-
-/** Grupos obrigatórios que ainda não têm nenhuma escolha. */
-export function missingGroups(item: MenuItem, choices: Choices): OptionGroup[] {
-  return (item.optionGroups ?? []).filter(
-    (group) => group.required && (choices[group.id] ?? []).length === 0,
-  );
-}
-
-/** Texto das opções marcadas, ex.: ["Ponto da carne: Ao ponto", "Adicionais: Bacon, Ovo"]. */
-export function describeChoices(item: MenuItem, choices: Choices): string[] {
-  return (item.optionGroups ?? []).flatMap((group) => {
-    const names = group.choices
-      .filter((choice) => (choices[group.id] ?? []).includes(choice.id))
-      .map((choice) => choice.name);
-    return names.length > 0 ? [`${group.title}: ${names.join(", ")}`] : [];
-  });
+export function createSampleMenu(): MenuData {
+  return {
+    settings: { ...settings },
+    categories: categories.map((category) => ({ ...category })),
+    items: rawItems.map((item, index) => ({
+      photoUrl: null,
+      optionGroups: [],
+      position: index,
+      ...item,
+    })),
+    zones: zones.map((zone) => ({ ...zone })),
+  };
 }

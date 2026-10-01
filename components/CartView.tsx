@@ -3,25 +3,38 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { ShoppingBag } from "lucide-react";
+import { ShoppingBag, Trash2 } from "lucide-react";
 import { useCart } from "@/lib/cart";
-import { describeChoices, findItem, formatPrice, unitPrice } from "@/lib/menu-data";
+import { byPosition, describeChoices, findItem, formatPrice, unitPrice } from "@/lib/menu-helpers";
 import { fieldLabels, firstError, validateOrder } from "@/lib/order";
+import type { MenuData } from "@/lib/types";
 import { BackButton } from "./BackButton";
-import { PhotoPlaceholder } from "./Icon";
+import { ItemPhoto } from "./Icon";
+import { MenuGate } from "./MenuGate";
 import { OrderForm } from "./OrderForm";
 import { PageShell } from "./PageShell";
 import { QtyStepper } from "./QtyStepper";
 
 export function CartView() {
+  return <MenuGate>{(menu) => <CartBody menu={menu} />}</MenuGate>;
+}
+
+function CartBody({ menu }: { menu: MenuData }) {
   const router = useRouter();
   const cart = useCart();
   const [showErrors, setShowErrors] = useState(false);
 
-  const allErrors = validateOrder(cart.order, cart.totalWithFee);
+  const allErrors = validateOrder(cart.order, cart.totalWithFee, menu);
   const missing = firstError(allErrors);
+  const blockedByPausedItems = cart.unavailableCount > 0 || cart.count === 0;
 
   function handleContinue() {
+    if (blockedByPausedItems) {
+      document
+        .querySelector("[data-indisponivel]")
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
     if (missing) {
       setShowErrors(true);
       document
@@ -31,6 +44,12 @@ export function CartView() {
     }
     router.push("/confirmacao");
   }
+
+  const buttonLabel = blockedByPausedItems
+    ? "Remova os itens indisponíveis"
+    : missing
+      ? `Complete: ${fieldLabels[missing]}`
+      : "Revisar pedido";
 
   return (
     <PageShell className="pb-52">
@@ -58,18 +77,31 @@ export function CartView() {
           <main className="space-y-6 px-4 py-4">
             <ul className="space-y-2.5">
               {cart.lines.map((line) => {
-                const item = findItem(line.itemId);
+                const item = findItem(menu, line.itemId);
                 if (!item) return null;
                 const details = describeChoices(item, line.choices);
+                const paused = !item.available;
                 return (
-                  <li key={line.key} className="flex gap-3.5 rounded-2xl border border-line bg-surface p-3">
-                    <PhotoPlaceholder name={item.icon} size={24} className="h-16 w-16 shrink-0 rounded-xl" />
+                  <li
+                    key={line.key}
+                    {...(paused ? { "data-indisponivel": "" } : {})}
+                    className={`flex gap-3.5 rounded-2xl border bg-surface p-3 ${
+                      paused ? "border-danger/50" : "border-line"
+                    }`}
+                  >
+                    <ItemPhoto
+                      item={item}
+                      iconSize={24}
+                      className={`h-16 w-16 shrink-0 rounded-xl ${paused ? "opacity-50" : ""}`}
+                    />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-3">
                         <h2 className="text-[14.5px] font-semibold leading-snug">{item.name}</h2>
-                        <span className="shrink-0 text-[14px] font-semibold tabular-nums">
-                          {formatPrice(unitPrice(item, line.choices) * line.qty)}
-                        </span>
+                        {!paused && (
+                          <span className="shrink-0 text-[14px] font-semibold tabular-nums">
+                            {formatPrice(unitPrice(item, line.choices) * line.qty)}
+                          </span>
+                        )}
                       </div>
                       {details.map((detail) => (
                         <p key={detail} className="mt-0.5 text-[12.5px] leading-snug text-muted">
@@ -82,13 +114,29 @@ export function CartView() {
                         </p>
                       )}
                       <div className="mt-2">
-                        <QtyStepper
-                          qty={line.qty}
-                          label={item.name}
-                          onMinus={() => cart.changeQty(line.key, -1)}
-                          onPlus={() => cart.changeQty(line.key, 1)}
-                          minusAsTrash={line.qty === 1}
-                        />
+                        {paused ? (
+                          <div className="flex items-center justify-between gap-2">
+                            <p role="alert" className="text-[12.5px] font-medium text-danger">
+                              Acabou por hoje
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => cart.changeQty(line.key, -line.qty)}
+                              className="flex min-h-11 items-center gap-1.5 rounded-full border border-line px-4 text-[13px] font-medium text-ink active:bg-tile"
+                            >
+                              <Trash2 size={15} strokeWidth={1.6} aria-hidden />
+                              Remover
+                            </button>
+                          </div>
+                        ) : (
+                          <QtyStepper
+                            qty={line.qty}
+                            label={item.name}
+                            onMinus={() => cart.changeQty(line.key, -1)}
+                            onPlus={() => cart.changeQty(line.key, 1)}
+                            minusAsTrash={line.qty === 1}
+                          />
+                        )}
                       </div>
                     </div>
                   </li>
@@ -120,6 +168,7 @@ export function CartView() {
 
             <OrderForm
               order={cart.order}
+              zones={byPosition(menu.zones)}
               errors={showErrors ? allErrors : {}}
               onChange={cart.updateOrder}
             />
@@ -150,12 +199,12 @@ export function CartView() {
               <button
                 type="button"
                 onClick={handleContinue}
-                aria-disabled={missing !== null}
+                aria-disabled={blockedByPausedItems || missing !== null}
                 className={`min-h-12 w-full rounded-full text-[14px] font-medium tracking-wide text-white ${
-                  missing ? "bg-muted/60" : "bg-accent active:bg-accent-dark"
+                  blockedByPausedItems || missing ? "bg-muted/60" : "bg-accent active:bg-accent-dark"
                 }`}
               >
-                {missing ? `Complete: ${fieldLabels[missing]}` : "Revisar pedido"}
+                {buttonLabel}
               </button>
             </div>
           </div>

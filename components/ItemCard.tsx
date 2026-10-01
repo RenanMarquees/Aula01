@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { formatPrice, isSimple, type MenuItem } from "@/lib/menu-data";
-import { PhotoPlaceholder } from "./Icon";
+import { formatPrice, isSimple } from "@/lib/menu-helpers";
+import type { MenuItem } from "@/lib/types";
+import { ItemPhoto } from "./Icon";
 import { QtyStepper } from "./QtyStepper";
 
 type Props = {
@@ -20,9 +21,8 @@ export function ItemCard({ item, qty, onChangeQty }: Props) {
         item.available ? "" : "opacity-60"
       }`}
     >
-      {/* Foto provisória: troque pela foto real no painel (Etapa 4). */}
       <Wrapper available={item.available} href={href} tabIndex={-1} ariaHidden className="shrink-0">
-        <PhotoPlaceholder name={item.icon} size={30} className="h-[84px] w-[84px] rounded-xl" />
+        <ItemPhoto item={item} iconSize={30} className="h-[84px] w-[84px] rounded-xl" />
       </Wrapper>
 
       <div className="flex min-w-0 flex-1 flex-col">

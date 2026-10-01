@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ShoppingBag } from "lucide-react";
-import { formatPrice } from "@/lib/menu-data";
+import { formatPrice } from "@/lib/menu-helpers";
 
 type Props = {
   count: number;
