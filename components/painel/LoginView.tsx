@@ -1,6 +1,6 @@
 "use client";
 
-import { Lock } from "lucide-react";
+import { Eye, EyeOff, Lock } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
@@ -13,6 +13,7 @@ export function LoginView() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const demo = useDemoMode();
 
   // Quem já entrou vai direto para o painel.
@@ -58,7 +59,10 @@ export function LoginView() {
             id="login-email"
             type="email"
             value={email}
-            onChange={(event) => setEmail(event.target.value)}
+            onChange={(event) => {
+              setEmail(event.target.value);
+              setError(null);
+            }}
             autoComplete="email"
             inputMode="email"
             autoCapitalize="none"
@@ -67,15 +71,32 @@ export function LoginView() {
           />
         </Field>
         <Field label="Senha" htmlFor="login-senha" error={error ?? undefined}>
-          <input
-            id="login-senha"
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            autoComplete="current-password"
-            required
-            className={inputClass}
-          />
+          <div className="relative">
+            <input
+              id="login-senha"
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(event) => {
+                setPassword(event.target.value);
+                setError(null);
+              }}
+              autoComplete="current-password"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              required
+              className={`${inputClass} pr-12`}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((current) => !current)}
+              aria-label={showPassword ? "Esconder a senha digitada" : "Mostrar a senha digitada"}
+              aria-pressed={showPassword}
+              className="absolute right-1 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-muted active:bg-tile"
+            >
+              {showPassword ? <EyeOff size={19} strokeWidth={1.5} aria-hidden /> : <Eye size={19} strokeWidth={1.5} aria-hidden />}
+            </button>
+          </div>
         </Field>
         <button type="submit" disabled={busy || !email || !password} className={`${primaryButton} w-full`}>
           {busy ? "Entrando…" : "Entrar"}
