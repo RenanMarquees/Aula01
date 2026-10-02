@@ -9,7 +9,7 @@ O dono cuida de tudo (pratos, fotos, preços, bairros, QR Codes) por um painel n
 - [x] Etapa 2: detalhe do item (opções, observação, quantidade) e carrinho
 - [x] Etapa 3: mesa/retirada/entrega, pagamento, prévia e envio pelo WhatsApp
 - [x] Etapa 4: painel do dono (modo demonstração e fichário online)
-- [ ] Etapa 5: publicação e testes no celular
+- [ ] Etapa 5: publicação (Vercel, em andamento) e testes no celular
 
 ## Como funciona
 
@@ -37,6 +37,17 @@ e-mail `dono@exemplo.com`, senha `demo1234`.
 
 Segurança: qualquer pessoa **lê** o cardápio; só o e-mail cadastrado em `owners` **altera** pratos, preços,
 bairros, ajustes e fotos (regras `row level security` em `supabase/schema.sql`).
+
+## Publicação (Vercel)
+
+1. Importe o repositório na Vercel (framework **Next.js**, *Root Directory* vazio).
+2. Em *Settings > Environment Variables*, cadastre `NEXT_PUBLIC_SUPABASE_URL` e
+   `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (valores públicos do projeto no Supabase).
+3. A cada envio para a branch de produção, a Vercel constrói e publica sozinha.
+   As variáveis `NEXT_PUBLIC_*` são embutidas na construção: ao mudá-las, faça um *Redeploy*.
+
+Atenção: o plano gratuito da Vercel (Hobby) é para uso pessoal e de teste. Para atender clientes de
+verdade, use a Vercel Pro ou outra hospedagem que permita uso comercial (por exemplo, Netlify).
 
 ## Desenvolvimento
 
